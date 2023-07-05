@@ -45,7 +45,42 @@ namespace IdentityManager.Controllers
             return View(model);
         }
 
-        private void AddErrors(IdentityResult result)
+		[HttpGet]
+		public IActionResult Login(string returnUrl = null)
+		{
+            ViewData["ReturnUrl"]=returnUrl;
+			return View();
+		}
+
+		[HttpPost]
+		[ValidateAntiForgeryToken]
+		public async Task<IActionResult> Login(LoginViewModel model)
+		{
+			if(ModelState.IsValid)
+            {
+                var result = await _signInManager.PasswordSignInAsync(model.Email, model.Password, model.RememberMe,lockoutOnFailure:false);
+                if(result.Succeeded)
+                {
+                    return RedirectToAction("Index", "Home");
+                }
+                else
+                {
+                    ModelState.AddModelError(string.Empty, "Invalid login attempt.");
+                    return View(model);
+                }
+            }
+			return View(model);
+		}
+
+		[HttpPost]
+		[ValidateAntiForgeryToken]
+		public async Task<IActionResult> LogOff(RegisterViewModel model)
+		{
+            await _signInManager.SignOutAsync();
+			return RedirectToAction(nameof(HomeController.Index),"Home");
+		}
+
+		private void AddErrors(IdentityResult result)
         {
             foreach(var error in result.Errors)
             {
