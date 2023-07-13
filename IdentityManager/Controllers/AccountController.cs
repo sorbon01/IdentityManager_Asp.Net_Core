@@ -33,6 +33,7 @@ namespace IdentityManager.Controllers
         public async Task<IActionResult> Register(RegisterViewModel model, string returnUrl = null)
         {
 			ViewData["ReturnUrl"] = returnUrl;
+            returnUrl = returnUrl ?? Url.Content("~/");
 			if (ModelState.IsValid)
             {
                 var user= new ApplicationUser { UserName = model.Email,Email=model.Email, Name=model.Name};
@@ -40,7 +41,7 @@ namespace IdentityManager.Controllers
                 if (result.Succeeded)
                 {
                     await _signInManager.SignInAsync(user, isPersistent: false);
-                    return RedirectToAction("Index","Home");
+                    return LocalRedirect(returnUrl);
                 }
                 AddErrors(result);
             }
@@ -59,12 +60,17 @@ namespace IdentityManager.Controllers
 		public async Task<IActionResult> Login(LoginViewModel model, string returnUrl=null)
 		{
 			ViewData["ReturnUrl"] = returnUrl;
+            returnUrl = returnUrl ?? Url.Content("~/");
 			if (ModelState.IsValid)
-            {
-                var result = await _signInManager.PasswordSignInAsync(model.Email, model.Password, model.RememberMe,lockoutOnFailure:false);
+			{
+                var result = await _signInManager.PasswordSignInAsync(model.Email, model.Password, model.RememberMe,lockoutOnFailure:true);
                 if(result.Succeeded)
                 {
                     return LocalRedirect(returnUrl);
+                }
+                if (result.IsLockedOut)
+                {
+                    return View("Lockout");
                 }
                 else
                 {
