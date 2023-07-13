@@ -21,17 +21,19 @@ namespace IdentityManager.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> Register()
+        public async Task<IActionResult> Register( string returnUrl = null)
         {
-            RegisterViewModel registerViewModel = new RegisterViewModel();
+			ViewData["ReturnUrl"] = returnUrl;
+			RegisterViewModel registerViewModel = new RegisterViewModel();
             return View(registerViewModel);
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Register(RegisterViewModel model)
+        public async Task<IActionResult> Register(RegisterViewModel model, string returnUrl = null)
         {
-            if (ModelState.IsValid)
+			ViewData["ReturnUrl"] = returnUrl;
+			if (ModelState.IsValid)
             {
                 var user= new ApplicationUser { UserName = model.Email,Email=model.Email, Name=model.Name};
                 var result  = await _userManager.CreateAsync(user,model.Password);
@@ -48,20 +50,21 @@ namespace IdentityManager.Controllers
 		[HttpGet]
 		public IActionResult Login(string returnUrl = null)
 		{
-            ViewData["ReturnUrl"]=returnUrl;
+            ViewData["ReturnUrl"] = returnUrl;
 			return View();
 		}
 
 		[HttpPost]
 		[ValidateAntiForgeryToken]
-		public async Task<IActionResult> Login(LoginViewModel model)
+		public async Task<IActionResult> Login(LoginViewModel model, string returnUrl=null)
 		{
-			if(ModelState.IsValid)
+			ViewData["ReturnUrl"] = returnUrl;
+			if (ModelState.IsValid)
             {
                 var result = await _signInManager.PasswordSignInAsync(model.Email, model.Password, model.RememberMe,lockoutOnFailure:false);
                 if(result.Succeeded)
                 {
-                    return RedirectToAction("Index", "Home");
+                    return LocalRedirect(returnUrl);
                 }
                 else
                 {

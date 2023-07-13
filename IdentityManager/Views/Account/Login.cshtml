@@ -2,7 +2,7 @@
 <h1 class="text-info">Log in</h1>
 <div class="row">
 	<div class="col-md-8">
-		<form app-controller="Account" asp-action="Login" asp-route-returnUrl="@" method="post" role="form">
+		<form app-controller="Account" asp-action="Login" asp-route-returnUrl="@ViewData["ReturnUrl"]" method="post" role="form">
 		<h4>Use a local account to log in.</h4>
 		<hr />
 		<div asp-validation-summary="All" class="text-danger"></div>
