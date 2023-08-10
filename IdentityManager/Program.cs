@@ -19,6 +19,12 @@ builder.Services.Configure<IdentityOptions>(options =>
     options.Lockout.MaxFailedAccessAttempts = 2;
 });
 
+builder.Services.AddAuthentication().AddFacebook(options =>
+{
+    options.AppId = "6523712581077682";
+    options.AppSecret = "eb04d6c6a2440cc20cfaf66a616b6134";
+});
+
 builder.Services.AddControllersWithViews();
 
 var app = builder.Build();
