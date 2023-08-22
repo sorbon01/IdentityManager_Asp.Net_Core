@@ -7,7 +7,8 @@ namespace IdentityManager.Models
     {
         [Required]
         public string Code { get; set; }
-        public string ReturnUrl { get; set; }
+        public string ReturnUrl { get; set; } = null;
+
         [Display(Name  = "Remember me?")]
         public bool RememberMe { get; set; }
     }
