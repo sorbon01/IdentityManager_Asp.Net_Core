@@ -3,6 +3,7 @@ using IdentityManager.Models;
 using Mailjet.Client.Resources;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace IdentityManager.Controllers
 {
@@ -121,6 +122,61 @@ namespace IdentityManager.Controllers
             return RedirectToAction(nameof(Index));
         }
 
+        [HttpPost]
+        public IActionResult Delete(string userId)
+        {
+			var objFromDb = _db.ApplicationUser.FirstOrDefault(u => u.Id == userId);
+			if (objFromDb == null)
+			{
+				return NotFound();
+			}
+            _db.ApplicationUser.Remove(objFromDb);
+            _db.SaveChanges();
+            TempData[SD.Success] = "User deleted successfully.";
+            return RedirectToAction(nameof(Index));
+		}
+
+        [HttpGet]
+        public async Task<IActionResult> ManageUserClaims(string userId)
+        {
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null)
+            {
+                return NotFound();
+            }
+
+            var model = new UserClaimsViewModel() 
+            { 
+                UserId= userId
+            };
+
+
+            foreach (var claim in ClaimStore.claimsList)
+            {
+                var userClaim = new UserClaim
+                {
+                    ClaimType = claim.Type
+                };
+                model.Claims.Add(userClaim);
+            }
+            return View(model);
+        }
+
+		[HttpPost]
+		[ValidateAntiForgeryToken]
+		public async Task<IActionResult> ManageUserClaims(UserClaimsViewModel userClaimsViewModel)
+		{
+			var user = await _userManager.FindByIdAsync(userClaimsViewModel.UserId);
+			if (user == null)
+			{
+				return NotFound();
+			}
+            var result = await _userManager.AddClaimsAsync(user,
+                userClaimsViewModel.Claims.Where(c=>c.IsSelected).Select(c=> new Claim(c.ClaimType,c.IsSelected.ToString()))
+                );
+            TempData[SD.Success] = "Claims updated successfully.";
+            return RedirectToAction(nameof(Index));
+		}
 
 	}
 }
