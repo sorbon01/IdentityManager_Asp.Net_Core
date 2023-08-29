@@ -30,6 +30,12 @@ builder.Services.AddAuthentication().AddFacebook(options =>
     options.AppSecret = "eb04d6c6a2440cc20cfaf66a616b6134";
 });
 
+builder.Services.AddAuthorization(opt =>
+{
+    opt.AddPolicy("Admin", policy => policy.RequireRole("Admin"));
+    opt.AddPolicy("UserAndAdmin", policy => policy.RequireRole("Admin").RequireRole("User"));
+});
+
 builder.Services.AddControllersWithViews();
 
 var app = builder.Build();

@@ -30,6 +30,23 @@
                         <li class="nav-item">
                             <a class="nav-link text-dark" asp-area="" asp-controller="Role" asp-action="Index">Roles</a>
                         </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="navberDropdown" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                Access Checker
+                            </a>
+                            <div class="dropdown-menu" aria-labelledby="navberDropdown">
+                                <a class="dropdown-item" asp-controller="AccessChecker" asp-action="AllAccess">All Access</a>
+                                <a class="dropdown-item" asp-controller="AccessChecker" asp-action="AuthorizedAccess">Authorized Access</a>
+                                <a class="dropdown-item" asp-controller="AccessChecker" asp-action="UserAccess">UserAccess</a>
+                                <a class="dropdown-item" asp-controller="AccessChecker" asp-action="UserOrAdminAccess">User or Admin Access</a>
+                                <a class="dropdown-item" asp-controller="AccessChecker" asp-action="UserAndAdminAccess">User and Admin Access</a>
+                                <a class="dropdown-item" asp-controller="AccessChecker" asp-action="AdminAccess">AdminAccess</a>
+                                <a class="dropdown-item" asp-controller="AccessChecker" asp-action="Admin_CreateAccess">Admin - Create only claim Access</a>
+                                <a class="dropdown-item" asp-controller="AccessChecker" asp-action="Admin_Create_Edit_DeleteAccess">Admin_Create_Edit_DeleteAccess</a>
+                                <a class="dropdown-item" asp-controller="AccessChecker" asp-action="Admin_Create_Edit_DeleteAccess_SuperAdmin">Admin_Create_Edit_DeleteAccess_SuperAdmin</a>
+                                <a class="dropdown-item" asp-controller="AccessChecker" asp-action="OnlySorbon">Only Sorbon</a>
+                            </div>
+                        </li>
                     </ul>
                 </div>
             </div>
