@@ -47,20 +47,34 @@ namespace IdentityManager.Controllers
 			return View();
 
 		}
-
+		[Authorize(Policy = "Admin_CreateAccess")]
 		//Accessible by users with a claim of create to be True
 		public IActionResult Admin_CreateAccess()
 		{
 			return View();
 		}
+		[Authorize(Policy = "Admin_Create_Edit_DeleteAccess")]
 		//Accessible by Admin user with claim of Create Edit and Delete (AND NOT OR)
 		public IActionResult Admin_Create_Edit_DeleteAccess()
 		{
 			return View();
 		}
 
+		[Authorize(Policy = "Admin_Create_Edit_DeleteAccess_Or_SuperAdmin")]
 		//Accessible by Admin user with create, edit and delete (AND NOT OR), OR if the user role is superAdmin
-		public IActionResult Admin_Create_Edit_DeleteAccess_SuperAdmin()
+		public IActionResult Admin_Create_Edit_DeleteAccess_Or_SuperAdmin()
+		{
+			return View();
+		}
+
+		[Authorize(Policy = "AdminWithMoreThan1000Days")]
+		public IActionResult OnlySorbon()
+		{
+			return View();
+		}
+
+		[Authorize(Policy = "FirstNameAuth")]
+		public IActionResult FirstNameAuth()
 		{
 			return View();
 		}

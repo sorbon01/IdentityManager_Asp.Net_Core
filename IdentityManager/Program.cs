@@ -1,5 +1,7 @@
+using IdentityManager.Authorize;
 using IdentityManager.Data;
 using IdentityManager.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.EntityFrameworkCore;
@@ -26,16 +28,29 @@ builder.Services.ConfigureApplicationCookie(options =>
 
 builder.Services.AddAuthentication().AddFacebook(options =>
 {
-    options.AppId = "6523712581077682";
-    options.AppSecret = "eb04d6c6a2440cc20cfaf66a616b6134";
+    options.AppId = "YourFacebookAppId";
+    options.AppSecret = "YourFacebookAppSecret";
 });
 
 builder.Services.AddAuthorization(opt =>
 {
     opt.AddPolicy("Admin", policy => policy.RequireRole("Admin"));
     opt.AddPolicy("UserAndAdmin", policy => policy.RequireRole("Admin").RequireRole("User"));
+    opt.AddPolicy("Admin_CreateAccess", policy => policy.RequireRole("Admin").RequireClaim("create","True"));
+    opt.AddPolicy("Admin_Create_Edit_DeleteAccess", policy => policy.RequireRole("Admin")
+        .RequireClaim("create","True")
+        .RequireClaim("edit","True")
+        .RequireClaim("Delete","True"));
+
+	opt.AddPolicy("Admin_Create_Edit_DeleteAccess_Or_SuperAdmin", policy => policy.RequireAssertion(context => AuthorizeAdminWithClaimsOrSuperAdmin(context)));
+    opt.AddPolicy("OnlySuperAdminChecker", policy => policy.Requirements.Add(new OnlySuperAdminChecker()));
+    opt.AddPolicy("AdminWithMoreThan1000Days", policy => policy.Requirements.Add(new AdminWithMoreThan1000DaysRequirement(1000)));
+    opt.AddPolicy("FirstNameAuth", policy => policy.Requirements.Add(new FirstNameAuthRequirement("Сорбон")));
 });
 
+builder.Services.AddScoped<IAuthorizationHandler, AdminWithOver1000DaysHandler>();
+builder.Services.AddScoped<IAuthorizationHandler, FirstNameAuthHandler>();
+builder.Services.AddScoped<INumberOfDaysForAccount, NumberOfDaysForAccount>();
 builder.Services.AddControllersWithViews();
 
 var app = builder.Build();
@@ -60,3 +75,14 @@ app.MapControllerRoute(
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
 app.Run();
+
+
+bool AuthorizeAdminWithClaimsOrSuperAdmin(AuthorizationHandlerContext context)
+{
+    return (context.User.IsInRole("Admin") &&
+		    context.User.HasClaim(c => c.Type == "Create" && c.Value == "True") &&
+		    context.User.HasClaim(c => c.Type == "Edit" && c.Value == "True") &&
+		    context.User.HasClaim(c => c.Type == "Delete" && c.Value == "True")
+		    ) || context.User.IsInRole("SuperAdmin"
+        );
+}

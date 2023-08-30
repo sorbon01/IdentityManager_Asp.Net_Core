@@ -1,4 +1,5 @@
-﻿using IdentityManager.Models;
+﻿using IdentityManager.Data;
+using IdentityManager.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
@@ -17,14 +18,21 @@ namespace IdentityManager.Controllers
         readonly IEmailSender _emailSender;
         readonly UrlEncoder _urlEncoder;
         readonly RoleManager<IdentityRole> _roleManager;
+        readonly ApplicationDbContext _db;
 
-        public AccountController(UserManager<IdentityUser> userManager, SignInManager<IdentityUser> signInManager, IEmailSender emailSender, UrlEncoder urlEncoder, RoleManager<IdentityRole> roleManager)
+        public AccountController(
+            UserManager<IdentityUser> userManager, 
+            SignInManager<IdentityUser> signInManager, 
+            IEmailSender emailSender, UrlEncoder urlEncoder, 
+            RoleManager<IdentityRole> roleManager,
+            ApplicationDbContext db)
         {
             _urlEncoder = urlEncoder;
             _userManager = userManager;
             _signInManager = signInManager;
             _emailSender = emailSender;
             _roleManager = roleManager;
+            _db = db;
         }
 
         public IActionResult Index()
@@ -72,7 +80,7 @@ namespace IdentityManager.Controllers
             returnUrl = returnUrl ?? Url.Content("~/");
 			if (ModelState.IsValid)
             {
-                var user= new ApplicationUser { UserName = model.Email,Email=model.Email, Name=model.Name};
+                var user= new ApplicationUser { UserName = model.Email,Email=model.Email, Name=model.Name, DateCreated = DateTime.Now };
                 var result  = await _userManager.CreateAsync(user,model.Password);
                 if (result.Succeeded)
                 {
@@ -87,7 +95,9 @@ namespace IdentityManager.Controllers
 					await _emailSender.SendEmailAsync(model.Email, "Confirm your Account -- Identity Manager",
 							"Please confirm you account by clicking here: <a href=\"" + callbackurl + "\">link</a>");
 					await _signInManager.SignInAsync(user, isPersistent: false);
-                    return LocalRedirect(returnUrl);
+					//add claim firstName
+					await _userManager.AddClaimAsync(user, new Claim("FirstName", user.Name));
+					return LocalRedirect(returnUrl);
                 }
                 AddErrors(result);
             }
@@ -145,6 +155,13 @@ namespace IdentityManager.Controllers
                 var result = await _signInManager.PasswordSignInAsync(model.Email, model.Password, model.RememberMe,lockoutOnFailure:true);
                 if(result.Succeeded)
                 {
+                    var user = _db.ApplicationUser.FirstOrDefault(u => u.Email.ToLower() == model.Email.ToLower());
+                    var claims = await _userManager.GetClaimsAsync(user);
+                    var claim = claims.FirstOrDefault(c => c.Type == "FirstName");
+                    if (claims.Count > 0 && claim != null )
+                        await _userManager.RemoveClaimAsync(user, claim);
+                    await _userManager.AddClaimAsync(user, new Claim("FirstName", user.Name));
+
                     return LocalRedirect(returnUrl);
                 }
                 if (result.RequiresTwoFactor)
@@ -283,7 +300,16 @@ namespace IdentityManager.Controllers
             {
                 //update any authentication tokens
                 await _signInManager.UpdateExternalAuthenticationTokensAsync(info);
-                return LocalRedirect(returnUrl); 
+				//add claim firstName
+				var email = info.Principal.FindFirstValue(ClaimTypes.Email);
+				var user = _db.ApplicationUser.FirstOrDefault(u => u.Email.ToLower() == email.ToLower());
+				var claims = await _userManager.GetClaimsAsync(user);
+				var claim = claims.FirstOrDefault(c => c.Type == "FirstName");
+				if (claims.Count > 0 && claim != null)
+					await _userManager.RemoveClaimAsync(user, claim);
+				await _userManager.AddClaimAsync(user, new Claim("FirstName", user.Name));
+
+				return LocalRedirect(returnUrl); 
             }
             if (result.RequiresTwoFactor)
             {
@@ -313,7 +339,7 @@ namespace IdentityManager.Controllers
 				{
 					return View("Error");
 				}
-				var user = new ApplicationUser { UserName = model.Email, Email = model.Email, Name = model.Name };
+				var user = new ApplicationUser { UserName = model.Email, Email = model.Email, Name = model.Name, DateCreated = DateTime.Now };
 				var result = await _userManager.CreateAsync(user);
 				if (result.Succeeded)
 				{

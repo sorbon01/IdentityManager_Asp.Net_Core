@@ -42,9 +42,9 @@ namespace IdentityManager.Services
 				}
 				   });
 			File.AppendAllText($"logs/emailMsg{DateTime.Now:ddMMyyyy}.txt", $"\n {email} : {JsonConvert.SerializeObject(htmlMessage)};");
+
 			var response =  await client.PostAsync(request);
-			;
-			/*if (response.IsSuccessStatusCode)
+			if (response.IsSuccessStatusCode)
 			{
 				Console.WriteLine(string.Format("Total: {0}, Count: {1}\n", response.GetTotal(), response.GetCount()));
 				Console.WriteLine(response.GetData());
@@ -55,7 +55,7 @@ namespace IdentityManager.Services
 				Console.WriteLine(string.Format("ErrorInfo: {0}\n", response.GetErrorInfo()));
 				Console.WriteLine(response.GetData());
 				Console.WriteLine(string.Format("ErrorMessage: {0}\n", response.GetErrorMessage()));
-			}*/
+			}
 		}
 	}
 }
